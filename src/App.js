@@ -3,6 +3,7 @@ import './App.css';
 
 const getEthereumObject = () => window.ethereum;
 
+// This function checks if we already have access to metamask account
 const getMetaMaskAccount = async () => {
   try {
     const ethereum = getEthereumObject();
@@ -33,13 +34,33 @@ const getMetaMaskAccount = async () => {
 export default function App() {
   const [currentAccount, setCurrentAccount] = useState("");
 
+  // This function is the 'action' of logging in.
+  const connectWallet = async () => {
+    try {
+      const ethereum = await getEthereumObject();
+      console.log("This is the Ethereum Object:", ethereum);
+
+      if (!ethereum) {
+        alert("Download Metamask!");
+        return;
+      }
+
+      // Request and set user's first wallet account;
+      const accounts = await ethereum.request({method: "eth_requestAccounts"})
+      setCurrentAccount(accounts[0]);
+    } catch (error) {
+      console.log(`Error fetching account: ${error.code}: ${error.message}`);
+    }
+  }
+
   useEffect(() => {
-    getMetaMaskAccount().then((account) => {
-      // If there is a valid account, set the account state
-      if (account) {
+    async function getAccount() {
+      const account = await getMetaMaskAccount();
+      if (account !== null) {
         setCurrentAccount(account);
       }
-    });
+    }
+    getAccount();
   }, []);
 
   const wave = () => {
@@ -61,6 +82,11 @@ export default function App() {
         <button className="waveButton" onClick={wave}>
           Wave at Me
         </button>
+        {!currentAccount && (
+          <button className="waveButton" onClick={connectWallet}>
+            Connect Wallet
+          </button>
+        )}
       </div>
     </div>
   );
