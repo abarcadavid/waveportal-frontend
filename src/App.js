@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { ethers } from "ethers";
+import contractAbi from './utils/WavePortal.json';
 import './App.css';
 
 const getEthereumObject = () => window.ethereum;
 
-// This function checks if we already have access to metamask account
+// This function gets the user's account with the assumption that they have
+// already authenticated and logged in before.
 const getMetaMaskAccount = async () => {
   try {
     const ethereum = getEthereumObject();
@@ -31,6 +34,8 @@ const getMetaMaskAccount = async () => {
   }
 }
 
+const contractAddress = '0x4572c19ad5EAC03c990d893b0C8550aaf65D2Ab1';
+
 export default function App() {
   const [currentAccount, setCurrentAccount] = useState("");
 
@@ -44,8 +49,6 @@ export default function App() {
         alert("Download Metamask!");
         return;
       }
-
-      // Request and set user's first wallet account;
       const accounts = await ethereum.request({method: "eth_requestAccounts"})
       setCurrentAccount(accounts[0]);
     } catch (error) {
@@ -63,8 +66,37 @@ export default function App() {
     getAccount();
   }, []);
 
-  const wave = () => {
-    
+  const wave = async () => {
+    try {
+      const { ethereum } = window;
+      // Provide a connection to the ethereum blockchain
+      const provider = new ethers.BrowserProvider(ethereum);
+      
+      // Provide the ethereum account that 'logged in'
+      const signer = await provider.getSigner();
+
+      console.log(contractAbi)
+      // Get access to the Wave Portal contract on the blockchain
+      const wavePortalContract = new ethers.BaseContract(
+        contractAddress,
+        contractAbi,
+        signer
+      );
+
+      // We can now call Wave Portal public functions!
+      const count = await wavePortalContract.getTotalWaves();
+      console.log("# of Waves: ", count);
+
+      // Lets Wave. This should increase Wave Count as well.
+      const waveTxn = await wavePortalContract.wave();
+      console.log('MINING: ',waveTxn.hash);
+
+      const receipt = await waveTxn.wait();
+      console.log("Receipt of TXN: ", receipt);
+
+    } catch(error) {
+      console.log(error);
+    }
   }
   
   return (
