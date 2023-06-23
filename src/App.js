@@ -34,7 +34,7 @@ const getMetaMaskAccount = async () => {
   }
 }
 
-const contractAddress = '0x4572c19ad5EAC03c990d893b0C8550aaf65D2Ab1';
+const contractAddress = '0xFBc4dC68A92c999D38c8c991d22E9280D253C66e';
 
 export default function App() {
   const [currentAccount, setCurrentAccount] = useState("");
