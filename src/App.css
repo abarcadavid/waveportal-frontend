@@ -1,3 +1,5 @@
+@import '~tiny-ui/dist/styles/index.css';
+
 .mainContainer {
   display: flex;
   justify-content: center;
