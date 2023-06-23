@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ethers } from "ethers";
+import { BrowserProvider, ethers } from "ethers";
 import contractAbi from './utils/WavePortal.json';
 import './App.css';
 
@@ -38,6 +38,40 @@ const contractAddress = '0xFBc4dC68A92c999D38c8c991d22E9280D253C66e';
 
 export default function App() {
   const [currentAccount, setCurrentAccount] = useState("");
+  const [waves, setWaves] = useState([]);
+
+  // Build the function with the assumption that we are already logged in.
+  const getAllWaves = async () => {
+    try {
+      const ethereum = await getEthereumObject();
+        if(ethereum) {
+        const provider = new BrowserProvider(ethereum);
+        const signer = await provider.getSigner();
+
+        const wavePortalContract = new ethers.BaseContract(
+          contractAddress,
+          contractAbi,
+          signer
+        );
+
+        const waveArray = await wavePortalContract.getWaves();
+
+        const cleanArray = [];
+        waveArray.forEach((wavetxn) => {
+          cleanArray.push({
+            waver: wavetxn.waver,
+            timestamp: new Date(Number(wavetxn.timestamp) * 1000),
+            message: wavetxn.message
+          });
+        });
+        console.log('Wave Array We Got: ', cleanArray);
+        setWaves(cleanArray);
+      }
+
+    } catch(error) {
+      console.log(error);
+    }
+  }
 
   // This function is the 'action' of logging in.
   const connectWallet = async () => {
@@ -61,6 +95,7 @@ export default function App() {
       const account = await getMetaMaskAccount();
       if (account !== null) {
         setCurrentAccount(account);
+        getAllWaves();
       }
     }
     getAccount();
@@ -88,7 +123,7 @@ export default function App() {
       console.log("# of Waves: ", count);
 
       // Lets Wave. This should increase Wave Count as well.
-      const waveTxn = await wavePortalContract.wave();
+      const waveTxn = await wavePortalContract.wave('Placeholder');
       console.log('MINING: ',waveTxn.hash);
 
       const receipt = await waveTxn.wait();
@@ -119,6 +154,15 @@ export default function App() {
             Connect Wallet
           </button>
         )}
+        {waves.map((wave, index) => {
+          return(
+            <div key={index}>
+              <div>Address: {wave.waver}</div>
+              <div>Timestamp: {wave.timestamp.toString()}</div>
+              <div>Message: {wave.message}</div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
