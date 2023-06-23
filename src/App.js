@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { BrowserProvider, ethers } from "ethers";
+import { BaseContract, BrowserProvider, ethers } from "ethers";
 import contractAbi from './utils/WavePortal.json';
 import MessageInput from './components/MessageInput';
 import InfoCard from "./components/InfoCard";
@@ -46,6 +46,7 @@ export default function App() {
 
   // Build the function with the assumption that we are already logged in.
   const getAllWaves = async () => {
+    console.log('GETALLWAVES')
     try {
       const ethereum = await getEthereumObject();
         if(ethereum) {
@@ -106,6 +107,53 @@ export default function App() {
     }
     getAccount();
   }, []);
+
+  useEffect(() => {
+    let wavePortalContract;
+    async function getContract() {
+      const ethereum = await getEthereumObject();
+      try {
+        if(ethereum) {
+          const provider = new BrowserProvider(ethereum);
+          const signer = await provider.getSigner();
+          const contract = new BaseContract(
+            contractAddress,
+            contractAbi,
+            signer
+          );
+          return contract;
+        }
+      }
+      catch(error) {
+        console.log('Not Signed In, Cannot Listen')
+      }
+      return null;
+    }
+
+    const addNewWave = (from, timestamp, message) => {
+      console.log("newWave", from, timestamp, message);
+      const transactionInfo = {
+        waver: from,
+        timestamp: new Date(Number(timestamp) * 1000),
+        message: message
+      }
+
+      setWaves(prev => [
+        ...prev,
+        transactionInfo
+      ]);
+    }
+
+    async function listen() {
+      wavePortalContract = await getContract();
+      if(wavePortalContract) {
+        await wavePortalContract.on("newWave", addNewWave);
+      }
+    }
+
+    listen();
+  
+    }, []);
   
   return (
     <div className="mainContainer">
@@ -127,7 +175,7 @@ export default function App() {
         
        {currentAccount ? (
         <>
-          <MessageInput />
+          <MessageInput updateWaveArray={getAllWaves} />
           <Divider />
           <InfoCard waveArray={waves} />
         </>
