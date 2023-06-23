@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { BrowserProvider, ethers } from "ethers";
 import contractAbi from './utils/WavePortal.json';
+import MessageInput from './components/MessageInput';
+import InfoCard from "./components/InfoCard";
+import ConnectWallet from "./components/ConnectWallet";
+import { Divider } from 'tiny-ui';
 import './App.css';
 
 const getEthereumObject = () => window.ethereum;
@@ -85,6 +89,8 @@ export default function App() {
       }
       const accounts = await ethereum.request({method: "eth_requestAccounts"})
       setCurrentAccount(accounts[0]);
+      getAllWaves();
+      console.log(accounts)
     } catch (error) {
       console.log(`Error fetching account: ${error.code}: ${error.message}`);
     }
@@ -100,69 +106,35 @@ export default function App() {
     }
     getAccount();
   }, []);
-
-  const wave = async () => {
-    try {
-      const { ethereum } = window;
-      // Provide a connection to the ethereum blockchain
-      const provider = new ethers.BrowserProvider(ethereum);
-      
-      // Provide the ethereum account that 'logged in'
-      const signer = await provider.getSigner();
-
-      console.log(contractAbi)
-      // Get access to the Wave Portal contract on the blockchain
-      const wavePortalContract = new ethers.BaseContract(
-        contractAddress,
-        contractAbi,
-        signer
-      );
-
-      // We can now call Wave Portal public functions!
-      const count = await wavePortalContract.getTotalWaves();
-      console.log("# of Waves: ", count);
-
-      // Lets Wave. This should increase Wave Count as well.
-      const waveTxn = await wavePortalContract.wave('Placeholder');
-      console.log('MINING: ',waveTxn.hash);
-
-      const receipt = await waveTxn.wait();
-      console.log("Receipt of TXN: ", receipt);
-
-    } catch(error) {
-      console.log(error);
-    }
-  }
   
   return (
     <div className="mainContainer">
 
       <div className="dataContainer">
+
         <div className="header">
         👋 Hey there!
         </div>
 
         <div className="bio">
-        I am David and I worked at an AgTech Startup, that's pretty cool right? Connect your Ethereum wallet and wave at me!
+          I am David and I worked at an agricultural tech startup, that's pretty
+          cool right?
+          <br/>
+          Connect your Ethereum wallet to be able to send a message
+          that will be displayed below!
         </div>
-
-        <button className="waveButton" onClick={wave}>
-          Wave at Me
-        </button>
-        {!currentAccount && (
-          <button className="waveButton" onClick={connectWallet}>
-            Connect Wallet
-          </button>
-        )}
-        {waves.map((wave, index) => {
-          return(
-            <div key={index}>
-              <div>Address: {wave.waver}</div>
-              <div>Timestamp: {wave.timestamp.toString()}</div>
-              <div>Message: {wave.message}</div>
-            </div>
-          );
-        })}
+        <Divider />
+        
+       {currentAccount ? (
+        <>
+          <MessageInput />
+          <Divider />
+          <InfoCard waveArray={waves} />
+        </>
+       ): (
+        <ConnectWallet login={connectWallet} />
+       )}
+        
       </div>
     </div>
   );
