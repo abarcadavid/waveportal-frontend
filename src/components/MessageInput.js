@@ -14,7 +14,7 @@ export default function MessageInput() {
       setLoading(true);
 
       // Before attempting a wave txn, we have to grab the ethereum object
-      const { ethereum } = window.ethereum;
+      const ethereum = await window.ethereum;
 
       // We now need to provide a connection using a provider
       const provider = new ethers.BrowserProvider(ethereum);
@@ -33,12 +33,12 @@ export default function MessageInput() {
       // results in a transaction
       const transaction = await wavePortalContract.wave(message);
       await transaction.wait();
-
   
     } catch(error) {
-      alert(error);
-    } finally{
-      // Whatever the result, set loading back to false
+      const errorCode = error.info.error.code;
+      const errorMessage = error.info.error.message;
+      alert(`Error Code: ${errorCode}\nError Message: ${errorMessage}`);
+    } finally {
       setLoading(false);
     }
   }
