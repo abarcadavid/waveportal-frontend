@@ -8,7 +8,7 @@ export default function MessageInput() {
   const [message, setMessage] = useState('');
 
   async function wave(message) {
-    const contractAddress = '0xFBc4dC68A92c999D38c8c991d22E9280D253C66e';
+    const contractAddress = '0x77acc93baA5B5e19bfa810Ad6A11e8aF9D58D1cb';
     try {
       // Set loading state
       setLoading(true);
@@ -31,12 +31,14 @@ export default function MessageInput() {
   
       // Attempt to wave(). This will alter the state of the contract so this 
       // results in a transaction
-      const transaction = await wavePortalContract.wave(message);
-      await transaction.wait();
+      const transaction = await wavePortalContract.wave(message, {gasLimit: 300000});
+      const receipt = await transaction.wait();
+      console.log('RECEIPT: ', receipt);
   
     } catch(error) {
       const errorCode = error.info.error.code;
       const errorMessage = error.info.error.message;
+      console.log(error);
       alert(`Error Code: ${errorCode}\nError Message: ${errorMessage}`);
     } finally {
       setLoading(false);
